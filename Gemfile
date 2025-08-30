@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 source "https://rubygems.org"
 
 # Bundle edge Rails instead: gem "rails", github: "rails/rails", branch: "main"
@@ -42,8 +44,8 @@ group :development, :test do
   gem "debug", platforms: %i[ mri windows ], require: "debug/prelude"
   gem "brakeman", require: false
   gem "rubocop-rails-omakase", require: false
+  gem "rubocop-rspec_rails", require: false
 
-  gem 'factory_bot_rails'
-  gem 'rspec-rails'
+  gem "factory_bot_rails"
+  gem "rspec-rails"
 end
-
