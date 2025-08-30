@@ -9,4 +9,12 @@ Rails.application.routes.draw do
 
   # Defines the root path route ("/")
   # root "posts#index"
+
+  scope defaults: { format: :json }, format: false do
+    namespace :api do
+      namespace :flights do
+        post "search", to: "search#call"
+      end
+    end
+  end
 end
