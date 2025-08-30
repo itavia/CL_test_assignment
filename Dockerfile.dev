@@ -4,7 +4,6 @@ FROM ruby:$RUBY_VERSION-slim
 
 WORKDIR /rails
 
-# Установим базовые пакеты + PostgreSQL client
 RUN apt-get update -qq && \
     apt-get install --no-install-recommends -y \
       curl \
@@ -17,17 +16,13 @@ RUN apt-get update -qq && \
       pkg-config \
     && rm -rf /var/lib/apt/lists/*
 
-# Устанавливаем bundler
 RUN gem install bundler
 
-# Копируем Gemfile и Gemfile.lock
 COPY Gemfile Gemfile.lock ./
 RUN bundle install
 
-# Копируем весь код приложения
 COPY . .
 
-# Создаём пользователя rails для безопасности
 RUN groupadd --system --gid 1000 rails && \
     useradd rails --uid 1000 --gid 1000 --gid 1000 --create-home --shell /bin/bash && \
     chown -R rails:rails db log storage tmp
