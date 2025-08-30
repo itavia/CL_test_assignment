@@ -6,10 +6,10 @@ module Api
       include Api::FlightParamsValidator
 
       def call
-        params_validator = validate_flight_params
-        return render_error("Invalid parameters") unless params_validator
+        flight_params = validate_flight_params
+        return render_error("Invalid parameters") unless flight_params
 
-        flights = ::Flights::SearchService.call(params_validator)
+        flights = ::Flights::SearchService.call(flight_params)
         render_success(flights)
       end
     end
