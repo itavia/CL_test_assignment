@@ -12,9 +12,11 @@ services:
       - bundle:/usr/local/bundle
     ports:
       - "3000:3000"
+    env_file:
+      - .env
     environment:
       RAILS_ENV: development
-      DATABASE_URL: "postgres://postgres:postgres@db:5432/cl_test_assignment_development"
+      DATABASE_HOST: db
     depends_on:
       - db
 

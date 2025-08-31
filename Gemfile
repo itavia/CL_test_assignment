@@ -43,9 +43,12 @@ gem "csv"
 group :development, :test do
   gem "debug", platforms: %i[ mri windows ], require: "debug/prelude"
   gem "brakeman", require: false
+
   gem "rubocop-rails-omakase", require: false
   gem "rubocop-rspec_rails", require: false
 
+  gem "database_cleaner-active_record"
+  gem "faker"
   gem "factory_bot_rails"
   gem "rspec-rails"
 end
