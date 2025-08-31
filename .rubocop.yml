@@ -4,7 +4,3 @@ inherit_gem: { rubocop-rails-omakase: rubocop.yml }
 plugins:
   - rubocop-rspec
   - rubocop-rails
-
-Style/FrozenStringLiteralComment:
-  Enabled: true
-  EnforcedStyle: always

@@ -1,5 +1,3 @@
-# frozen_string_literal: true
-
 class CreateSegments < ActiveRecord::Migration[8.0]
   def change
     create_table :segments do |t|

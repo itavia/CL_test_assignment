@@ -1,5 +1,3 @@
-# frozen_string_literal: true
-
 class CreatePermittedRoutes < ActiveRecord::Migration[8.0]
   def change
     create_table :permitted_routes, id: :bigint do |t|
