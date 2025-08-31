@@ -81,17 +81,17 @@ if File.exist?(routes_file)
 
       # Parse JSON array string for transfer_iata_codes
       transfer_iata_codes = begin
-        if transfer_codes_str && !transfer_codes_str.empty?
-          # Remove outer quotes if they exist
-          cleaned_str = transfer_codes_str.strip.gsub(/\A"(.*)"\z/, '\1')
-          JSON.parse(cleaned_str)
-        else
-          []
-        end
-      rescue JSON::ParserError => e
-        puts "    ⚠️  Row #{index + 1} JSON parse error for '#{transfer_codes_str}': #{e.message}. Using empty array."
-        []
-      end
+                              if transfer_codes_str && !transfer_codes_str.empty?
+                                # Remove outer quotes if they exist
+                                cleaned_str = transfer_codes_str.strip.gsub(/\A"(.*)"\z/, '\1')
+                                JSON.parse(cleaned_str)
+                              else
+                                []
+                              end
+                            rescue JSON::ParserError => e
+                              puts "    ⚠️  Row #{index + 1} JSON parse error for '#{transfer_codes_str}': #{e.message}. Using empty array."
+                              []
+                            end
     else
       puts "    ⚠️  Row #{index + 1} has unexpected format: #{line.strip}"
       next
