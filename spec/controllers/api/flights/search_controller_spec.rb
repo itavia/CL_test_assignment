@@ -23,5 +23,14 @@ RSpec.describe Api::Flights::SearchController, type: :controller do
       post :call, params: valid_params, as: :json
       expect(response).to have_http_status(:ok)
     end
+
+    context "when invalid params" do
+      let(:invalid_params) { {} }
+
+      it "returns status 422" do
+        post :call, params: invalid_params, as: :json
+        expect(response).to have_http_status(:unprocessable_entity)
+      end
+    end
   end
 end
