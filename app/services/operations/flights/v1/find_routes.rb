@@ -12,7 +12,7 @@ module Operations
         def call(params)
           validated_params = yield validate(params)
           permitted_route = find_permitted_route(validated_params.to_h)
-          return Success([]) unless permitted_route
+          return Success[[]] unless permitted_route
 
           possible_routes = generate_possible_paths(permitted_route)
           departure_range = Range.new(*validated_params.to_h.slice(:departure_from, :departure_to).values)
@@ -35,7 +35,7 @@ module Operations
           end
 
           threads.each(&:join)
-          Success[available_segments]
+          Success(available_segments)
         end
 
         private
