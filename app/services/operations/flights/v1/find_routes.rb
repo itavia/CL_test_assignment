@@ -35,7 +35,7 @@ module Operations
           end
 
           threads.each(&:join)
-          Success(available_segments)
+          Success[available_segments]
         end
 
         private
