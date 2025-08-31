@@ -1,0 +1,18 @@
+default: &default
+  adapter: postgresql
+  encoding: unicode
+  host: <%= ENV['DATABASE_HOST'] %>
+  port: <%= ENV['DATABASE_PORT'] || 5432 %>
+  max_connections: <%= ENV.fetch("DATABASE_POOL", 5) %>
+
+development:
+  <<: *default
+  database: <%= ENV['DATABASE_DEV_NAME'] %>
+  username: <%= ENV['DATABASE_USERNAME'] %>
+  password: <%= ENV['DATABASE_PASSWORD'] %>
+
+test:
+  <<: *default
+  database: <%= ENV['DATABASE_TEST_NAME'] %>
+  username: <%= ENV['DATABASE_USERNAME'] %>
+  password: <%= ENV['DATABASE_PASSWORD'] %>

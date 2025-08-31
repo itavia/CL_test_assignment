@@ -86,6 +86,10 @@ GEM
     connection_pool (2.5.3)
     crass (1.0.6)
     csv (3.3.5)
+    database_cleaner-active_record (2.2.2)
+      activerecord (>= 5.a)
+      database_cleaner-core (~> 2.0)
+    database_cleaner-core (2.0.1)
     date (3.4.1)
     debug (1.11.0)
       irb (~> 1.10)
@@ -103,6 +107,8 @@ GEM
     factory_bot_rails (6.5.0)
       factory_bot (~> 6.5)
       railties (>= 6.1.0)
+    faker (3.5.2)
+      i18n (>= 1.8.11, < 2)
     fugit (1.11.2)
       et-orbi (~> 1, >= 1.2.11)
       raabro (~> 1.4)
@@ -283,6 +289,13 @@ GEM
       rubocop (>= 1.72)
       rubocop-performance (>= 1.24)
       rubocop-rails (>= 2.30)
+    rubocop-rspec (3.6.0)
+      lint_roller (~> 1.1)
+      rubocop (~> 1.72, >= 1.72.1)
+    rubocop-rspec_rails (2.31.0)
+      lint_roller (~> 1.1)
+      rubocop (~> 1.72, >= 1.72.1)
+      rubocop-rspec (~> 3.5)
     ruby-progressbar (1.13.0)
     securerandom (0.4.1)
     solid_cable (3.0.12)
@@ -343,14 +356,17 @@ DEPENDENCIES
   bootsnap
   brakeman
   csv
+  database_cleaner-active_record
   debug
   factory_bot_rails
+  faker
   kamal
   pg (>= 1.1)
   puma (>= 5.0)
   rails (~> 8.0.2, >= 8.0.2.1)
   rspec-rails
   rubocop-rails-omakase
+  rubocop-rspec_rails
   solid_cable
   solid_cache
   solid_queue
