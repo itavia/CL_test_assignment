@@ -38,6 +38,9 @@ gem "thruster", require: false
 # CSV processing for seed data
 gem "csv"
 
+gem "dry-monads", "~> 1.9.0"
+gem "dry-validation", "~> 1.11.1"
+
 group :development, :test do
   gem "debug", platforms: %i[ mri windows ], require: "debug/prelude"
   gem "brakeman", require: false
