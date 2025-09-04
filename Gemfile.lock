@@ -72,6 +72,7 @@ GEM
       securerandom (>= 0.3)
       tzinfo (~> 2.0, >= 2.0.5)
       uri (>= 0.13.1)
+    alba (3.9.0)
     ast (2.4.3)
     base64 (0.3.0)
     bcrypt_pbkdf (1.1.1)
@@ -93,6 +94,17 @@ GEM
     diff-lcs (1.6.2)
     dotenv (3.1.8)
     drb (2.2.3)
+    dry-core (1.1.0)
+      concurrent-ruby (~> 1.0)
+      logger
+      zeitwerk (~> 2.6)
+    dry-monads (1.9.0)
+      concurrent-ruby (~> 1.0)
+      dry-core (~> 1.1)
+      zeitwerk (~> 2.6)
+    dry-operation (1.0.0)
+      dry-monads (~> 1.6)
+      zeitwerk (~> 2.6)
     ed25519 (1.4.0)
     erb (5.0.2)
     erubi (1.13.1)
@@ -171,6 +183,9 @@ GEM
       racc (~> 1.4)
     nokogiri (1.18.9-x86_64-linux-musl)
       racc (~> 1.4)
+    oj (3.16.11)
+      bigdecimal (>= 3.0)
+      ostruct (>= 0.2)
     ostruct (0.6.3)
     parallel (1.27.0)
     parser (3.3.9.0)
@@ -340,12 +355,15 @@ PLATFORMS
   x86_64-linux-musl
 
 DEPENDENCIES
+  alba
   bootsnap
   brakeman
   csv
   debug
+  dry-operation
   factory_bot_rails
   kamal
+  oj
   pg (>= 1.1)
   puma (>= 5.0)
   rails (~> 8.0.2, >= 8.0.2.1)

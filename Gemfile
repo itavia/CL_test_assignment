@@ -38,12 +38,18 @@ gem "thruster", require: false
 # CSV processing for seed data
 gem "csv"
 
+# Serializer
+gem "alba"
+gem "oj"
+
+# Services
+gem "dry-operation"
+
 group :development, :test do
   gem "debug", platforms: %i[ mri windows ], require: "debug/prelude"
   gem "brakeman", require: false
   gem "rubocop-rails-omakase", require: false
 
-  gem 'factory_bot_rails'
-  gem 'rspec-rails'
+  gem "factory_bot_rails"
+  gem "rspec-rails"
 end
-
