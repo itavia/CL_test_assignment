@@ -5,8 +5,8 @@ RSpec.describe RouteFinder::ItineraryBuilder do
 
   describe '.call' do
     let(:carrier) { 'S7' }
-    let(:departure_from) { '2024-01-01' }
-    let(:departure_to) { '2024-01-02' }
+    let(:departure_from) { Date.parse('2024-01-01') }
+    let(:departure_to) { Date.parse('2024-01-02') }
 
     # Time constants for convenience
     let(:t0) { Time.zone.parse('2024-01-01T10:00:00Z') }
@@ -45,7 +45,7 @@ RSpec.describe RouteFinder::ItineraryBuilder do
       end
 
       context 'when the flight is outside the date range' do
-        let(:departure_from) { '2024-01-03' }
+        let(:departure_from) { Date.parse('2024-01-03') }
         it { is_expected.to be_empty }
       end
     end

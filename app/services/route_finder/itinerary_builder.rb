@@ -10,8 +10,8 @@ module RouteFinder
     def initialize(blueprint_path:, segments_by_origin:, departure_from:, departure_to:)
       @blueprint_path = blueprint_path
       @segments_by_origin = segments_by_origin
-      @departure_from = Date.parse(departure_from).beginning_of_day
-      @departure_to = Date.parse(departure_to).end_of_day
+      @departure_from = departure_from.beginning_of_day
+      @departure_to = departure_to.end_of_day
       @final_itineraries = []
     end
 
