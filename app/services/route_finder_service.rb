@@ -34,8 +34,7 @@ class RouteFinderService
       )
     end
 
-    # TODO: Format the itineraries for the final JSON response
-    itineraries.count
+    RouteFinder::RouteSerializer.call(itineraries)
   end
 
   private
