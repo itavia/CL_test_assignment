@@ -9,7 +9,7 @@ module Api
       private
 
       def search_params
-        params.require(:route).permit(:carrier, :origin_iata, :destination_iata, :departure_from, :departure_to)
+        params.permit(:carrier, :origin_iata, :destination_iata, :departure_from, :departure_to)
       end
     end
   end
