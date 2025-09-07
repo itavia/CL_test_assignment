@@ -20,7 +20,9 @@ class RouteFinderService
 
     return [] unless permitted_route
 
+    blueprint_paths = RouteFinder::PermittedRouteParser.call(permitted_route)
+
     # TODO: Continue with the next steps
-    []
+    blueprint_paths
   end
 end
