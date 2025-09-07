@@ -47,7 +47,7 @@ class RouteFinderService
     end_date = Date.parse(@departure_to).end_of_day + 48.hours
 
     segments = Segment.where(
-      carrier: @carrier,
+      airline: @carrier,
       origin_iata: all_airports,
       std: Date.parse(@departure_from).beginning_of_day..end_date
     ).to_a
