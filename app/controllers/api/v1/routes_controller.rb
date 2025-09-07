@@ -2,8 +2,8 @@ module Api
   module V1
     class RoutesController < ApplicationController
       def search
-        routes = RouteFinderService.call(search_params)
-        render json: routes
+        itineraries = RouteFinderService.call(search_params)
+        render json: RouteSerializer.render(itineraries)
       end
 
       private

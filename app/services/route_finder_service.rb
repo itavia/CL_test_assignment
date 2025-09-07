@@ -34,7 +34,7 @@ class RouteFinderService
       )
     end
 
-    RouteFinder::RouteSerializer.call(itineraries)
+    itineraries
   end
 
   private
