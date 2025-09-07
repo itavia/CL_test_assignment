@@ -53,18 +53,36 @@ RSpec.describe 'Api::V1::Routes', type: :request do
     end
 
     context 'with invalid parameters' do
-      let(:invalid_params) { params.except(:carrier) }
+      it 'returns a 422 error if a parameter is missing' do
+        post '/api/v1/routes/search', params: params.except(:carrier).to_json, headers: headers
 
-      before do
-        post '/api/v1/routes/search', params: invalid_params.to_json, headers: headers
+        expect(response).to have_http_status(:unprocessable_entity)
+        json_response = JSON.parse(response.body)
+        expect(json_response['errors']['carrier']).to include("can't be blank")
       end
 
-      # This test depends on how the controller handles missing params.
-      # Rails default for permit is to return an empty hash, which might not cause a 400.
-      # For a real app, we'd add explicit validation.
-      it 'returns a successful response with empty results' do
-        expect(response).to have_http_status(:ok)
-        expect(JSON.parse(response.body)).to eq([])
+      it 'returns a 422 error for malformed IATA codes' do
+        post '/api/v1/routes/search', params: params.merge(origin_iata: 'US').to_json, headers: headers
+
+        expect(response).to have_http_status(:unprocessable_entity)
+        json_response = JSON.parse(response.body)
+        expect(json_response['errors']['origin_iata']).to include("must be a 3-letter uppercase IATA code")
+      end
+
+      it 'returns a 422 error if departure_to is before departure_from' do
+        post '/api/v1/routes/search', params: params.merge(departure_to: '2023-12-31').to_json, headers: headers
+
+        expect(response).to have_http_status(:unprocessable_entity)
+        json_response = JSON.parse(response.body)
+        expect(json_response['errors']['departure_to']).to include("can't be before departure_from")
+      end
+
+      it 'returns a 422 error for an invalid date format' do
+        post '/api/v1/routes/search', params: params.merge(departure_from: 'not-a-date').to_json, headers: headers
+
+        expect(response).to have_http_status(:unprocessable_entity)
+        json_response = JSON.parse(response.body)
+        expect(json_response['errors']['departure_from']).to include("can't be blank")
       end
     end
   end
