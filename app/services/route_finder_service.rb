@@ -21,10 +21,21 @@ class RouteFinderService
     return [] unless permitted_route
 
     blueprint_paths = RouteFinder::PermittedRouteParser.call(permitted_route)
+    return [] if blueprint_paths.empty?
+
     preload_segments(blueprint_paths)
 
-    # TODO: Continue with the next steps
-    @segments_by_origin.values.flatten.count
+    itineraries = blueprint_paths.flat_map do |path|
+      RouteFinder::ItineraryBuilder.call(
+        blueprint_path: path,
+        segments_by_origin: @segments_by_origin,
+        departure_from: @departure_from,
+        departure_to: @departure_to
+      )
+    end
+
+    # TODO: Format the itineraries for the final JSON response
+    itineraries.count
   end
 
   private
