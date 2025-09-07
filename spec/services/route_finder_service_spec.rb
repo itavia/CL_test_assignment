@@ -9,8 +9,8 @@ RSpec.describe RouteFinderService do
         carrier: 'S7',
         origin_iata: 'UUS',
         destination_iata: 'DME',
-        departure_from: '2024-01-01',
-        departure_to: '2024-01-07'
+        departure_from: Date.parse('2024-01-01'),
+        departure_to: Date.parse('2024-01-07')
       }
     end
 
