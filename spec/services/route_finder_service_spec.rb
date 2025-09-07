@@ -21,8 +21,8 @@ RSpec.describe RouteFinderService do
       it 'finds the direct flight' do
         result = described_class.call(params)
         expect(result.size).to eq(1)
-        expect(result.first[:segments].size).to eq(1)
-        expect(result.first[:segments].first[:segment_number]).to eq(segment.segment_number)
+        expect(result.first.size).to eq(1)
+        expect(result.first.first.segment_number).to eq(segment.segment_number)
       end
     end
 
@@ -34,9 +34,9 @@ RSpec.describe RouteFinderService do
       it 'finds the flight with one transfer' do
         result = described_class.call(params)
         expect(result.size).to eq(1)
-        expect(result.first[:segments].size).to eq(2)
-        expect(result.first[:segments].first[:segment_number]).to eq(segment1.segment_number)
-        expect(result.first[:segments].second[:segment_number]).to eq(segment2.segment_number)
+        expect(result.first.size).to eq(2)
+        expect(result.first.first.segment_number).to eq(segment1.segment_number)
+        expect(result.first.second.segment_number).to eq(segment2.segment_number)
       end
     end
 
@@ -49,8 +49,8 @@ RSpec.describe RouteFinderService do
       it 'finds the flight with two transfers' do
         result = described_class.call(params)
         expect(result.size).to eq(1)
-        expect(result.first[:segments].size).to eq(3)
-        expect(result.first[:segments].map { |s| s[:segment_number] }).to eq([segment1.segment_number, segment2.segment_number, segment3.segment_number])
+        expect(result.first.size).to eq(3)
+        expect(result.first.map(&:segment_number)).to eq([segment1.segment_number, segment2.segment_number, segment3.segment_number])
       end
     end
 
