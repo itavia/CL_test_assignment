@@ -21,8 +21,27 @@ class RouteFinderService
     return [] unless permitted_route
 
     blueprint_paths = RouteFinder::PermittedRouteParser.call(permitted_route)
+    preload_segments(blueprint_paths)
 
     # TODO: Continue with the next steps
-    blueprint_paths
+    @segments_by_origin.values.flatten.count
+  end
+
+  private
+
+  def preload_segments(blueprint_paths)
+    all_airports = blueprint_paths.flatten.uniq
+
+    # The date range for segments should be wide enough to accommodate connections.
+    # We take the user's departure window and add the max connection time.
+    end_date = Date.parse(@departure_to).end_of_day + 48.hours
+
+    segments = Segment.where(
+      carrier: @carrier,
+      origin_iata: all_airports,
+      std: Date.parse(@departure_from).beginning_of_day..end_date
+    ).to_a
+
+    @segments_by_origin = segments.group_by(&:origin_iata)
   end
 end
