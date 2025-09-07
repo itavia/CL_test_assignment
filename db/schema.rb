@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_09_07_101320) do
+ActiveRecord::Schema[8.0].define(version: 2025_09_07_103929) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -34,6 +34,6 @@ ActiveRecord::Schema[8.0].define(version: 2025_09_07_101320) do
     t.datetime "sta"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-    t.index ["airline", "origin_iata", "destination_iata", "std"], name: "idx_segments_for_route_finding"
+    t.index ["airline", "origin_iata", "std"], name: "idx_segments_on_airline_origin_std"
   end
 end
