@@ -2,8 +2,14 @@ module Api
   module V1
     class RoutesController < ApplicationController
       def search
-        itineraries = RouteFinderService.call(search_params)
-        render json: RouteSerializer.render(itineraries)
+        @search_form = RouteSearchForm.new(search_params.to_h)
+
+        if @search_form.valid?
+          itineraries = RouteFinderService.call(@search_form.attributes.symbolize_keys)
+          render json: RouteSerializer.render(itineraries)
+        else
+          render json: { errors: @search_form.errors.messages }, status: :unprocessable_entity
+        end
       end
 
       private
