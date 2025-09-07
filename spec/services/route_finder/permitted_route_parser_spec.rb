@@ -1,6 +1,8 @@
 require 'rails_helper'
 
 RSpec.describe RouteFinder::PermittedRouteParser do
+  include FactoryBot::Syntax::Methods
+
   describe '.call' do
     let(:origin_iata) { 'UUS' }
     let(:destination_iata) { 'DME' }

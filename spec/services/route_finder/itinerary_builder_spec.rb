@@ -1,6 +1,8 @@
 require 'rails_helper'
 
 RSpec.describe RouteFinder::ItineraryBuilder do
+  include FactoryBot::Syntax::Methods
+
   describe '.call' do
     let(:carrier) { 'S7' }
     let(:departure_from) { '2024-01-01' }

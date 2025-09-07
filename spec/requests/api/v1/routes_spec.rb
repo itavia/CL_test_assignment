@@ -1,6 +1,8 @@
 require 'rails_helper'
 
 RSpec.describe 'Api::V1::Routes', type: :request do
+  include FactoryBot::Syntax::Methods
+
   describe 'POST /api/v1/routes/search' do
     let(:headers) { { 'CONTENT_TYPE' => 'application/json', 'ACCEPT' => 'application/json' } }
     let(:params) do
