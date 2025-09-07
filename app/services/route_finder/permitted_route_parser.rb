@@ -16,7 +16,11 @@ module RouteFinder
 
       @route.transfer_iata_codes.each do |transfer_code|
         transfer_airports = transfer_code.scan(/.{3}/)
-        paths << [@origin, *transfer_airports, @destination]
+        # Only add a path if the scan found valid 3-letter codes and the original
+        # string was composed entirely of 3-letter codes.
+        if !transfer_airports.empty? && transfer_code.length == transfer_airports.join.length
+          paths << [@origin, *transfer_airports, @destination]
+        end
       end
 
       paths
