@@ -46,6 +46,10 @@ module RouteFinder
       next_origin = last_segment.destination_iata
       next_destination = remaining_airports.first
 
+      # Bonus: Prevent visiting the same airport twice in one itinerary.
+      # This protects against nonsensical cyclic routes like UUS -> OVB -> UUS -> DME.
+      return if current_itinerary.map(&:origin_iata).include?(next_destination)
+
       possible_next_segments = @segments_by_origin[next_origin] || []
 
       possible_next_segments.each do |next_segment|
