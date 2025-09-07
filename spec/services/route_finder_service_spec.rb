@@ -1,6 +1,8 @@
 require 'rails_helper'
 
 RSpec.describe RouteFinderService do
+  include FactoryBot::Syntax::Methods
+
   describe '.call' do
     let(:params) do
       {
@@ -87,9 +89,6 @@ RSpec.describe RouteFinderService do
       # No permitted_route created
       result = described_class.call(params)
       expect(result).to be_empty
-    end
-      result = described_class.call(params)
-      expect(result).to eq([])
     end
   end
 end
