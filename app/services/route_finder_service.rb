@@ -12,7 +12,15 @@ class RouteFinderService
   end
 
   def call
-    # TODO: Implement the actual route finding logic
+    permitted_route = PermittedRoute.find_by(
+      carrier: @carrier,
+      origin_iata: @origin_iata,
+      destination_iata: @destination_iata
+    )
+
+    return [] unless permitted_route
+
+    # TODO: Continue with the next steps
     []
   end
 end
