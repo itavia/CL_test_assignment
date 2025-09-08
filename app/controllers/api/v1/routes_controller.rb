@@ -1,7 +1,7 @@
 module Api
   module V1
     class RoutesController < ApplicationController
-      # POST /api/v1/routes/search
+      # GET /api/v1/routes/search
       #
       # Accepts a flight search query and returns possible flight itineraries.
       # It uses a Form Object for validation and a Service Object to encapsulate

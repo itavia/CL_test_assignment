@@ -3,7 +3,7 @@ require 'rails_helper'
 RSpec.describe 'Api::V1::Routes', type: :request do
   include FactoryBot::Syntax::Methods
 
-  describe 'POST /api/v1/routes/search' do
+  describe 'GET /api/v1/routes/search' do
     let(:headers) { { 'CONTENT_TYPE' => 'application/json', 'ACCEPT' => 'application/json' } }
     let(:params) do
       {
@@ -20,7 +20,7 @@ RSpec.describe 'Api::V1::Routes', type: :request do
       let!(:segment) { create(:segment, airline: 'S7', origin_iata: 'UUS', destination_iata: 'DME', std: Time.zone.parse('2024-01-02T10:00:00Z')) }
 
       before do
-        post '/api/v1/routes/search', params: params.to_json, headers: headers
+        get '/api/v1/routes/search', params: params, headers: headers
       end
 
       it 'returns a 200 OK status' do
@@ -39,7 +39,7 @@ RSpec.describe 'Api::V1::Routes', type: :request do
 
     context 'when no route is found' do
       before do
-        post '/api/v1/routes/search', params: params.to_json, headers: headers
+        get '/api/v1/routes/search', params: params, headers: headers
       end
 
       it 'returns a 200 OK status' do
@@ -54,7 +54,7 @@ RSpec.describe 'Api::V1::Routes', type: :request do
 
     context 'with invalid parameters' do
       it 'returns a 422 error if a parameter is missing' do
-        post '/api/v1/routes/search', params: params.except(:carrier).to_json, headers: headers
+        get '/api/v1/routes/search', params: params.except(:carrier), headers: headers
 
         expect(response).to have_http_status(:unprocessable_content)
         json_response = JSON.parse(response.body)
@@ -62,7 +62,7 @@ RSpec.describe 'Api::V1::Routes', type: :request do
       end
 
       it 'returns a 422 error for malformed IATA codes' do
-        post '/api/v1/routes/search', params: params.merge(origin_iata: 'US').to_json, headers: headers
+        get '/api/v1/routes/search', params: params.merge(origin_iata: 'US'), headers: headers
 
         expect(response).to have_http_status(:unprocessable_content)
         json_response = JSON.parse(response.body)
@@ -70,7 +70,7 @@ RSpec.describe 'Api::V1::Routes', type: :request do
       end
 
       it 'returns a 422 error if departure_to is before departure_from' do
-        post '/api/v1/routes/search', params: params.merge(departure_to: '2023-12-31').to_json, headers: headers
+        get '/api/v1/routes/search', params: params.merge(departure_to: '2023-12-31'), headers: headers
 
         expect(response).to have_http_status(:unprocessable_content)
         json_response = JSON.parse(response.body)
@@ -78,7 +78,7 @@ RSpec.describe 'Api::V1::Routes', type: :request do
       end
 
       it 'returns a 422 error for an invalid date format' do
-        post '/api/v1/routes/search', params: params.merge(departure_from: 'not-a-date').to_json, headers: headers
+        get '/api/v1/routes/search', params: params.merge(departure_from: 'not-a-date'), headers: headers
 
         expect(response).to have_http_status(:unprocessable_content)
         json_response = JSON.parse(response.body)
