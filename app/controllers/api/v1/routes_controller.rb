@@ -10,7 +10,7 @@ module Api
         @search_form = RouteSearchForm.new(search_params.to_h)
 
         if @search_form.valid?
-          itineraries = RouteFinderService.call(@search_form.attributes.symbolize_keys)
+          itineraries = GoFlightSearchService.call(@search_form.attributes.symbolize_keys)
           render json: RouteSerializer.render(itineraries)
         else
           render json: { errors: @search_form.errors.messages }, status: :unprocessable_content
