@@ -1,0 +1,40 @@
+syntax = "proto3";
+
+package proto;
+
+import "google/protobuf/timestamp.proto";
+
+option go_package = "github.com/ruuke/flight_booking/flight_search_go/pkg/proto";
+
+service FlightSearchService {
+  rpc SearchRoutes(SearchRequest) returns (SearchResponse) {}
+}
+
+message SearchRequest {
+  string carrier = 1;
+  string origin_iata = 2;
+  string destination_iata = 3;
+  string departure_from = 4; // Using string for date "YYYY-MM-DD"
+  string departure_to = 5;   // Using string for date "YYYY-MM-DD"
+}
+
+message SearchResponse {
+  repeated Itinerary itineraries = 1;
+}
+
+message Itinerary {
+  string origin_iata = 1;
+  string destination_iata = 2;
+  google.protobuf.Timestamp departure_time = 3;
+  google.protobuf.Timestamp arrival_time = 4;
+  repeated Segment segments = 5;
+}
+
+message Segment {
+  string carrier = 1;
+  string segment_number = 2;
+  string origin_iata = 3;
+  string destination_iata = 4;
+  google.protobuf.Timestamp std = 5;
+  google.protobuf.Timestamp sta = 6;
+}
