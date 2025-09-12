@@ -4,20 +4,12 @@
 class RouteFinderService
   MAX_CONNECTION_HOURS = 48.hours
 
-  # Entry point for the service.
   # @param params [Hash] The search parameters from the controller.
-  # @option params [String] :carrier The airline carrier code.
-  # @option params [String] :origin_iata The origin airport IATA code.
-  # @option params [String] :destination_iata The destination airport IATA code.
-  # @option params [Date] :departure_from The start of the departure window.
-  # @option params [Date] :departure_to The end of the departure window.
-  # @return [Array<Array<Segment>>] A list of found itineraries, where each itinerary is an array of Segment objects.
+  # @return [Array<Array<Segment>>] A list of found itineraries.
   def self.call(params)
     new(params).call
   end
 
-  # Initializes the service with the search parameters.
-  # @param params [Hash] The search parameters.
   def initialize(params)
     @carrier = params[:carrier]
     @origin_iata = params[:origin_iata]
@@ -29,52 +21,34 @@ class RouteFinderService
   # Executes the main logic of the service.
   # @return [Array<Array<Segment>>] A list of found itineraries.
   def call
-    # 1. Find the rule for the requested route.
-    permitted_route = PermittedRoute.find_by(
-      carrier: @carrier,
-      origin_iata: @origin_iata,
-      destination_iata: @destination_iata
-    )
+    return [] unless find_permitted_route &&
+                     parse_blueprint_paths &&
+                     preload_segments
 
-    return [] unless permitted_route
-
-    # 2. Parse the rule into a list of possible airport sequences (blueprint paths).
-    blueprint_paths = RouteFinder::PermittedRouteParser.call(permitted_route)
-    return [] if blueprint_paths.empty?
-
-    # 3. Preload all potentially relevant flight segments to avoid N+1 queries.
-    max_stops = blueprint_paths.map { |path| path.length - 2 }.max
-    max_stops = [0, max_stops].max # Ensure it's not negative for direct flights
-
-    segments_by_origin = preload_segments(blueprint_paths, max_stops)
-
-    # 4. For each blueprint path, build all possible real itineraries.
-    itineraries = blueprint_paths.flat_map do |path|
-      RouteFinder::ItineraryBuilder.call(
-        blueprint_path: path,
-        segments_by_origin: segments_by_origin,
-        departure_from: @departure_from,
-        departure_to: @departure_to
-      )
-    end
-
-    itineraries
+    build_itineraries
   end
 
   private
 
-  # Preloads all segments that could possibly be part of a valid itinerary.
-  # This is the key optimization to prevent N+1 database queries.
-  # The segments are grouped by their origin airport for fast lookups.
-  # @param blueprint_paths [Array<Array<String>>] The list of possible airport sequences.
-  # @param max_stops [Integer] The maximum number of stops in any blueprint path.
-  def preload_segments(blueprint_paths, max_stops)
-    all_airports = blueprint_paths.flatten.uniq
+  def find_permitted_route
+    @permitted_route = PermittedRoute.find_by(
+      carrier: @carrier,
+      origin_iata: @origin_iata,
+      destination_iata: @destination_iata
+    )
+    @permitted_route.present?
+  end
 
-    # The date range must be wide enough for all potential connections.
-    # Each stop can add up to MAX_CONNECTION_HOURS to the journey.
-    extension = max_stops * MAX_CONNECTION_HOURS
-    end_date = @departure_to.end_of_day + extension
+  def parse_blueprint_paths
+    @blueprint_paths = RouteFinder::PermittedRouteParser.call(@permitted_route)
+    @blueprint_paths.present?
+  end
+
+  # Preloads all segments that could possibly be part of a valid itinerary.
+  # @return [Boolean] True on success.
+  def preload_segments
+    all_airports = @blueprint_paths.flatten.uniq
+    end_date = calculate_search_end_date(@blueprint_paths)
 
     query = Segment.where(
       airline: @carrier,
@@ -82,15 +56,35 @@ class RouteFinderService
       std: @departure_from.beginning_of_day..end_date
     )
 
-    # Use find_in_batches to process records, building the hash manually
-    # to avoid loading everything into memory at once.
+    @segments_by_origin = group_segments_by_origin(query)
+    true
+  end
+
+  def build_itineraries
+    @blueprint_paths.flat_map do |path|
+      RouteFinder::ItineraryBuilder.call(
+        blueprint_path: path,
+        segments_by_origin: @segments_by_origin,
+        departure_from: @departure_from,
+        departure_to: @departure_to
+      )
+    end
+  end
+
+  def calculate_search_end_date(blueprint_paths)
+    max_stops = blueprint_paths.map { |path| path.length - 2 }.max
+    max_stops = [0, max_stops].max # Ensure it's not negative
+
+    @departure_to.end_of_day + (max_stops * MAX_CONNECTION_HOURS)
+  end
+
+  def group_segments_by_origin(query)
     segments_by_origin = Hash.new { |h, k| h[k] = [] }
     query.find_in_batches do |batch|
       batch.each do |segment|
         segments_by_origin[segment.origin_iata] << segment
       end
     end
-
     segments_by_origin
   end
 end
