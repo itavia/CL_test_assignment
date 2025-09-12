@@ -39,6 +39,7 @@ gem "thruster", require: false
 gem "csv"
 
 group :development, :test do
+  gem "strong_migrations"
   gem "debug", platforms: %i[ mri windows ], require: "debug/prelude"
   gem "brakeman", require: false
   gem "rubocop-rails-omakase", require: false
