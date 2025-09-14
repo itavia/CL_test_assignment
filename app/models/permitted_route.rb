@@ -14,4 +14,5 @@
 
 class PermittedRoute < ApplicationRecord
   validates :carrier, :origin_iata, :destination_iata, presence: true
+  validates :origin_iata, :destination_iata, length: { is: 3 }
 end
