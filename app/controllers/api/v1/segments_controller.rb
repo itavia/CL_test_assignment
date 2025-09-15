@@ -3,11 +3,9 @@
 module Api
   module V1
     class SegmentsController < ApplicationController
-      # POST /api/v1/segments
-      # { segments: [ { airline, segment_number, origin_iata, destination_iata, std?, sta? }, ... ] }
       def create
-        rows = Array(params[:segments])
-        return render json: { message: 'Пустой список segments' }, status: :bad_request if rows.blank?
+        rows = params[:segments]
+        return render(json: { error: 'Пустой список segments' }, status: :bad_request) if rows.blank?
 
         imported = 0
         errors = []
@@ -40,7 +38,6 @@ module Api
           segment_number: r['segment_number'],
           std: safe_time(r['std'])
         }.compact
-        # если std не передан, считаем просто по (airline, segment_number) — создадим новую запись
         key.present? ? Segment.find_or_initialize_by(key) : Segment.new
       end
 

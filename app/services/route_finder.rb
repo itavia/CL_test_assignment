@@ -6,63 +6,61 @@
 #   carrier: "S7"
 #   origin_iata: "UUS"
 #   destination_iata: "DME"
-#   departure_from: Time
-#   departure_to:   Time
+#   departure_from: Time (UTC)
+#   departure_to:   Time (UTC)
+#   max_transfers: Integer | nil  (0 => только прямые; 1 => не более одной пересадки; nil => без ограничения)
 #
 # Правила:
-# - Берём разрешённые маршруты (PermittedRoute) для carrier+origin+destination
-# - Учитываем direct: true (маршрут без пересадок)
-# - Учитываем transfer_iata_codes:
-#     * элемент массива может быть обычным "OVB" (одна пересадка)
-#     * или слитной строкой "VVOOVB" (две пересадки) — режем по 3 символа
-# - Для каждой цепочки точек ищем сегменты в таблице Segment (по carrier/airline)
-# - Проверяем окно стыковок для каждой стыки:
-#     MIN_CONNECTION_TIME = 480 мин (8ч)
-#     MAX_CONNECTION_TIME = 2880 мин (48ч)
-# - Возвращаем массив маршрутов в формате ТЗ
-#
+# - Берём разрешённые маршруты (PermittedRoute) для carrier+origin+destination.
+# - direct: true — вариант без пересадок.
+# - transfer_iata_codes — элементы "OVB" или слитные "VVOOVB"; режем по 3.
+# - Окно стыковок строго по ТЗ: 8..48 часов (включительно).
+# - Выход: массив маршрутов; ключевые поля из ТЗ + вспомогательные поля для твоих реквест-спеков.
+
 class RouteFinder
   MIN_CONNECTION_TIME = 480   # minutes (8h)
   MAX_CONNECTION_TIME = 2880  # minutes (48h)
 
   ResultSegment = Struct.new(:carrier, :segment_number, :origin_iata, :destination_iata, :std, :sta, keyword_init: true)
 
-  def initialize(carrier:, origin_iata:, destination_iata:, departure_from:, departure_to:)
+  def initialize(carrier:, origin_iata:, destination_iata:, departure_from:, departure_to:, max_transfers: nil)
     @carrier        = carrier.to_s.upcase
-    @origin_iata    = origin_iata.to_s.upcase[0, 3]
-    @destination    = destination_iata.to_s.upcase[0, 3]
+    @origin_iata    = origin_iata.to_s.upcase
+    @destination    = destination_iata.to_s.upcase
     @departure_from = departure_from
     @departure_to   = departure_to
+    @max_transfers  = max_transfers
   end
 
   def call
-    permitted_routes = PermittedRoute.where(
+    prs = PermittedRoute.where(
       carrier: @carrier,
       origin_iata: @origin_iata,
       destination_iata: @destination
     )
-
-    return [] if permitted_routes.blank?
+    return [] if prs.blank?
 
     itineraries = []
 
-    permitted_routes.find_each do |pr|
-      # 1) прямой вариант
+    prs.find_each do |pr|
+      # 1) прямые
       if pr.direct?
-        chains = [[@origin_iata, @destination]]
-        itineraries.concat find_itineraries_for_chains(chains)
+        itineraries.concat build_itineraries_for_chain([@origin_iata, @destination])
       end
 
-      # 2) варианты с пересадками
+      # 2) пересадки
       Array(pr.transfer_iata_codes).each do |code|
-        # "OVB" => ["OVB"]
-        # "VVOOVB" => ["VVO","OVB"]
         hops = split_iata_chain(code)
-
         next if hops.empty?
 
+        # Ограничение по количеству пересадок
+        if !@max_transfers.nil?
+          next if @max_transfers == 0
+          next if hops.size > @max_transfers
+        end
+
         chain = [@origin_iata, *hops, @destination]
-        itineraries.concat find_itineraries_for_chains([chain])
+        itineraries.concat build_itineraries_for_chain(chain)
       end
     end
 
@@ -71,53 +69,38 @@ class RouteFinder
 
   private
 
-  # "VVO" -> ["VVO"]
-  # "VVOOVB" -> ["VVO","OVB"]
-  # "ABCDEF" -> ["ABC","DEF"] (если кратно 3)
-  def split_iata_chain(raw)
-    s = raw.to_s.upcase.gsub(/[^A-Z]/, '')
-    return [] if s.blank?
-    return [s] if s.length == 3
-
-    return [] unless (s.length % 3).zero?
-
+  # "VVO" -> ["VVO"], "VVOOVB" -> ["VVO","OVB"]
+  def split_iata_chain(code)
+    s = code.to_s.strip.upcase
+    return [] if s.empty?
+    raise ArgumentError, "Invalid transfer chain length" unless (s.length % 3).zero?
     s.scan(/.{3}/)
   end
 
-  # Для каждой цепочки [A, B, C, D] строим все комбинации сегментов A->B, B->C, C->D
-  def find_itineraries_for_chains(chains)
-    chains.flat_map { |chain| build_itineraries_for_chain(chain) }
-  end
-
+  # Для цепочки [A, B, C, D] строим комбинации сегментов A->B, B->C, C->D
   def build_itineraries_for_chain(chain)
     legs = chain.each_cons(2).to_a # [[A,B],[B,C],[C,D]]
 
-    # Для первого плеча ограничиваем std окном departure_from..departure_to
+    # Первое плечо — ограничиваем окном вылета
     first_leg_segments = find_segments(legs.first[0], legs.first[1], limit_by_window: true)
-
     return [] if first_leg_segments.empty?
 
-    # Дальше бэктрекинг
     results = []
-
     stack = []
-    dfs_build(legs, 0, first_leg_segments, stack, results)
-
+    dfs_build(chain, legs, 0, first_leg_segments, stack, results)
     results
   end
 
-  def dfs_build(legs, leg_index, candidate_segments, stack, results)
-    candidate_segments.each do |seg|
+  def dfs_build(chain, legs, leg_index, candidates, stack, results)
+    candidates.each do |seg|
       stack.push(seg)
 
       if leg_index == legs.size - 1
-        # последний сегмент собран — проверим и добавим итог
         results << build_result(stack)
       else
         next_origin, next_dest = legs[leg_index + 1]
-
         next_candidates = find_segments(next_origin, next_dest, after_arrival: seg.sta)
-        dfs_build(legs, leg_index + 1, next_candidates, stack, results)
+        dfs_build(chain, legs, leg_index + 1, next_candidates, stack, results)
       end
 
       stack.pop
@@ -125,48 +108,65 @@ class RouteFinder
   end
 
   def build_result(stack)
-    {
-      "origin_iata"      => stack.first.origin_iata,
-      "destination_iata" => stack.last.destination_iata,
+    # Берём начало/конец маршрута из стека сегментов
+    route_origin = stack.first.origin_iata
+    route_dest   = stack.last.destination_iata
+
+    segments_payload = stack.map do |s|
+      {
+        "carrier"          => s.carrier,
+        "segment_number"   => s.segment_number,
+        "origin_iata"      => s.origin_iata,
+        "destination_iata" => s.destination_iata,
+        "std"              => s.std.iso8601(3),
+        "sta"              => s.sta.iso8601(3)
+      }
+    end
+
+    payload = {
+      "origin_iata"      => route_origin,
+      "destination_iata" => route_dest,
       "departure_time"   => stack.first.std.iso8601(3),
       "arrival_time"     => stack.last.sta.iso8601(3),
-      "segments"         => stack.map { |s|
-        {
-          "carrier"         => s.carrier,
-          "segment_number"  => s.segment_number,
-          "origin_iata"     => s.origin_iata,
-          "destination_iata"=> s.destination_iata,
-          "std"             => s.std.iso8601(3),
-          "sta"             => s.sta.iso8601(3)
-        }
-      }
+      "segments"         => segments_payload
     }
+
+    # Доп. поля для твоих реквест-спеков (не противоречат ТЗ)
+    payload["type"] = (stack.size == 1 ? "direct" : "transfer")
+    payload["legs"] = segments_payload
+
+    if stack.size == 2
+      # Ровно одна пересадка
+      payload["transfer_airport"] = stack.first.destination_iata
+      payload["connection_minutes"] = ((stack.last.std - stack.first.sta) / 60).to_i
+    end
+
+    payload
   end
 
   # Ищем сегменты для плеча origin->dest
-  # - limit_by_window: для первого плеча ограничение std ∈ [@departure_from, @departure_to]
-  # - after_arrival:   для последующих плеч — std в окне стыковки относительно sta предыдущего сегмента
+  # - limit_by_window: для первого плеча std ∈ [@departure_from, @departure_to]
+  # - after_arrival:   для следующих — std в окне стыковки (8..48 ч) от sta предыдущего
   def find_segments(origin, dest, limit_by_window: false, after_arrival: nil)
     scope = Segment.where(
       airline: @carrier,
       origin_iata: origin,
       destination_iata: dest
-    )
+    ).order(:std)
 
-    if limit_by_window
-      scope = scope.where(std: @departure_from..@departure_to)
-    end
+    scope = scope.where(std: @departure_from..@departure_to) if limit_by_window
 
-    segments = scope.order(:std).to_a
+    records = scope.to_a
 
     if after_arrival
-      segments.select! do |s|
-        conn_min = ((s.std - after_arrival) / 60.0)
-        conn_min >= MIN_CONNECTION_TIME && conn_min <= MAX_CONNECTION_TIME
+      records.select! do |s|
+        minutes = (s.std - after_arrival) / 60.0
+        minutes >= MIN_CONNECTION_TIME && minutes <= MAX_CONNECTION_TIME
       end
     end
 
-    segments.map do |s|
+    # Оборачиваем в ResultSegment (чтобы гарантированно был carrier в элементе)
+    records.map do |s|
       ResultSegment.new(
         carrier: @carrier,
         segment_number: s.segment_number,
